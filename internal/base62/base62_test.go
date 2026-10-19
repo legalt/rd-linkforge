@@ -49,7 +49,10 @@ func TestDecodeErrors(t *testing.T) {
 		"ab-cd":                 ErrInvalidCharacter,
 		"ab_cd":                 ErrInvalidCharacter,
 		"hello world":           ErrInvalidCharacter,
+		strings.Repeat("z", 11): ErrOverflow,
 		strings.Repeat("z", 12): ErrOverflow,
+		strings.Repeat("0", 12): ErrOverflow,
+		"!!!!!!!!!!!!":          ErrOverflow,
 	}
 	for in, want := range tests {
 		if _, err := Decode(in); !errors.Is(err, want) {

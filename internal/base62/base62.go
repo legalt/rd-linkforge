@@ -50,6 +50,10 @@ func Decode(s string) (uint64, error) {
 	if s == "" {
 		return 0, ErrEmpty
 	}
+	// A uint64 in base 62 is at most 11 digits.
+	if len(s) > 11 {
+		return 0, ErrOverflow
+	}
 
 	for _, ch := range s {
 		index := strings.IndexRune(alphabet, ch)
