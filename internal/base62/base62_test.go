@@ -28,7 +28,7 @@ func TestEncodeWidth(t *testing.T) {
 }
 
 func TestDecode(t *testing.T) {
-	for _, v := range []uint64{0, 1, 61, 62, 3843, 123456, 1 << 40} {
+	for _, v := range []uint64{0, 1, 61, 62, 3843, 123456, 1 << 40, ^uint64(0)} {
 		code := Encode(v)
 		got, err := Decode(code)
 		if err != nil {

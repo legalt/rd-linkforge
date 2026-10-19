@@ -21,13 +21,15 @@ func Encode(v uint64) string {
 		return "0"
 	}
 
-	var res string
+	var buf [11]byte
+	i := len(buf)
 	for v > 0 {
-		res = string(alphabet[v%baseValue]) + res
+		i--
+		buf[i] = alphabet[v%baseValue]
 		v /= baseValue
 	}
 
-	return res
+	return string(buf[i:])
 }
 
 // EncodeWidth does the same but left-pads with zeroes to at least width characters. The value itself is never truncated.
