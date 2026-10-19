@@ -3,10 +3,17 @@
 .PHONY: check
 check: vet lint test ## Run every gate CI runs
 
+BIN_DIR := bin
+
 .PHONY: build
-build: ## Compile all packages in the workspace
+build: ## Compile all packages and write bin/linkforge
 	go build ./...
 	cd pkg && go build ./...
+	go build -o $(BIN_DIR)/linkforge ./cmd/linkforge
+
+.PHONY: clean
+clean:
+	rm -rf $(BIN_DIR)
 
 .PHONY: test
 test: ## Run tests with the race detector
