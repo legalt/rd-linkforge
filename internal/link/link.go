@@ -2,7 +2,7 @@ package link
 
 import (
 	"errors"
-	"strings"
+	"net/url"
 	"time"
 
 	"github.com/skskuzan/rd-linkforge/internal/base62"
@@ -25,7 +25,7 @@ func New(id uint64, target string) (Link, error) {
 		return Link{}, ErrEmptyTarget
 	}
 
-	if !strings.HasPrefix(target, "https://") && !strings.HasPrefix(target, "http://") {
+	if _, err := url.ParseRequestURI(target); err != nil {
 		return Link{}, ErrUnsupportedSchema
 	}
 
