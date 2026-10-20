@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -10,40 +11,41 @@ import (
 func TestAdd(t *testing.T) {
 	s := New()
 	l := link.Link{ID: 7, Code: "keep", Target: "https://a.example"}
-	if err := Add(s, l); err != nil {
-		t.Fatalf("Add() error = %v", err)
+	if _, err := s.Create(context.Background(), l); err != nil {
+		t.Fatalf("Create() error = %v", err)
 	}
-	got, ok := Get(s, l.ID)
+	got, ok := s.Get(l.ID)
 	if !ok || got != l {
 		t.Errorf("Get(%d) = %+v, %v; want %+v, true", l.ID, got, ok, l)
 	}
-	if Count(s) != 1 {
-		t.Errorf("Count() = %d, want 1", Count(s))
+	if s.Count() != 1 {
+		t.Errorf("Count() = %d, want 1", s.Count())
 	}
 }
 
 func TestAddDuplicate(t *testing.T) {
 	s := New()
 	original := link.Link{ID: 7, Code: "keep", Target: "https://a.example"}
-	if err := Add(s, original); err != nil {
-		t.Fatalf("Add() error = %v", err)
+	if _, err := s.Create(context.Background(), original); err != nil {
+		t.Fatalf("Create() error = %v", err)
 	}
 
-	err := Add(s, link.Link{ID: original.ID, Code: "replace", Target: "https://b.example"})
+	_, err := s.Create(context.Background(), link.Link{ID: original.ID, Code: "replace", Target: "https://b.example"})
 	if !errors.Is(err, ErrDuplicateID) {
-		t.Errorf("Add() error = %v, want %v", err, ErrDuplicateID)
+		t.Errorf("Create() error = %v, want %v", err, ErrDuplicateID)
 	}
-	got, ok := Get(s, original.ID)
+	got, ok := s.Get(original.ID)
 	if !ok || got != original {
 		t.Errorf("Get(%d) = %+v, %v; want the original link", original.ID, got, ok)
 	}
-	if Count(s) != 1 {
-		t.Errorf("Count() = %d, want 1", Count(s))
+	if s.Count() != 1 {
+		t.Errorf("Count() = %d, want 1", s.Count())
 	}
 }
 
 func TestGet(t *testing.T) {
-	got, ok := Get(New(), 42)
+	s := New()
+	got, ok := s.Get(42)
 	if ok || got != (link.Link{}) {
 		t.Errorf("Get(42) = %+v, %v; want zero Link, false", got, ok)
 	}
@@ -51,7 +53,7 @@ func TestGet(t *testing.T) {
 
 func TestAll(t *testing.T) {
 	s := New()
-	if got := All(s); len(got) != 0 {
+	if got := s.All(); len(got) != 0 {
 		t.Errorf("All(empty) = %+v, want empty", got)
 	}
 
@@ -62,8 +64,8 @@ func TestAll(t *testing.T) {
 		{ID: 7, Code: "g"},
 	}
 	for _, l := range in {
-		if err := Add(s, l); err != nil {
-			t.Fatalf("Add(%d): %v", l.ID, err)
+		if _, err := s.Create(context.Background(), l); err != nil {
+			t.Fatalf("Create(%d): %v", l.ID, err)
 		}
 	}
 
@@ -73,7 +75,7 @@ func TestAll(t *testing.T) {
 		{ID: 7, Code: "g"},
 		{ID: 10, Code: "j"},
 	}
-	got := All(s)
+	got := s.All()
 	if len(got) != len(want) {
 		t.Fatalf("All() len = %d, want %d", len(got), len(want))
 	}
@@ -82,7 +84,7 @@ func TestAll(t *testing.T) {
 			t.Errorf("All()[%d] = %+v, want %+v", i, got[i], want[i])
 		}
 	}
-	if Count(s) != len(want) {
-		t.Errorf("Count() = %d, want %d", Count(s), len(want))
+	if s.Count() != len(want) {
+		t.Errorf("Count() = %d, want %d", s.Count(), len(want))
 	}
 }
