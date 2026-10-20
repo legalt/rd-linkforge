@@ -32,6 +32,14 @@ func Encode(v uint64) string {
 	return string(buf[i:])
 }
 
+func EncodeRecursive(v uint64) string {
+	if v < baseValue {
+		return string(alphabet[v])
+	}
+
+	return EncodeRecursive(v/baseValue) + string(alphabet[v%baseValue])
+}
+
 // EncodeWidth does the same but left-pads with zeroes to at least width characters. The value itself is never truncated.
 func EncodeWidth(v uint64, width int) string {
 	res := Encode(v)
