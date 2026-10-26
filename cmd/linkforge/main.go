@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -9,29 +10,23 @@ import (
 )
 
 func main() {
-	s := store.New()
+	links := store.New()
+	svc := link.NewService(links)
+	ctx := context.Background()
 
-	var id uint64 = 1
-
-	for _, v := range os.Args[1:] {
-		link, err := link.New(id, v)
+	for _, target := range os.Args[1:] {
+		_, err := svc.Shorten(ctx, link.ShortenRequest{
+			Target:  target,
+			OwnerID: "demo-app",
+		})
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%v\n", err)
-			return
+			fmt.Fprintf(os.Stderr, "%s: %v\n", target, err)
 		}
-
-		if err := store.Add(s, link); err != nil {
-			fmt.Fprintf(os.Stderr, "%v\n", err)
-			return
-		}
-
-		id++
 	}
 
-	links := store.All(s)
-	for _, link := range links {
-		fmt.Printf("%s  %s\n", link.Code, link.Target)
+	for _, l := range links.All() {
+		fmt.Printf("%s  %s\n", l.Code, l.Target)
 	}
 
-	fmt.Printf("\nTotal: %d\n", len(links))
+	fmt.Printf("\nTotal: %d\n", links.Count())
 }

@@ -10,23 +10,26 @@ import (
 
 var (
 	ErrEmptyTarget       = errors.New("link: empty target")
-	ErrUnsupportedSchema = errors.New("link: unsupported schema")
+	ErrUnsupportedScheme = errors.New("link: unsupported schema")
+	ErrNotFound          = errors.New("link: not found")
+	ErrAliasTaken        = errors.New("link: alias already taken")
+	ErrInvalidAlias      = errors.New("link: invalid alias")
+	ErrReservedAlias     = errors.New("link: reserved alias")
+	ErrForbidden         = errors.New("link: forbidden")
+	ErrExpired           = errors.New("link: expired")
+	ErrInvalidExpiry     = errors.New("link: invalid expiry")
+	ErrEmptyOwner        = errors.New("link: owner is required")
+	ErrInvalidCursor     = errors.New("link: invalid cursor")
 )
-
-type Link struct {
-	ID        uint64
-	Code      string
-	Target    string
-	CreatedAt time.Time
-}
 
 func New(id uint64, target string) (Link, error) {
 	if target == "" {
 		return Link{}, ErrEmptyTarget
 	}
 
-	if _, err := url.ParseRequestURI(target); err != nil {
-		return Link{}, ErrUnsupportedSchema
+	u, err := url.ParseRequestURI(target)
+	if err != nil || (u.Scheme != "http" && u.Scheme != "https") {
+		return Link{}, ErrUnsupportedScheme
 	}
 
 	return Link{
