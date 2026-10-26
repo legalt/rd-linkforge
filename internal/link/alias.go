@@ -3,7 +3,6 @@ package link
 import (
 	"fmt"
 	"strings"
-	"unicode"
 )
 
 const (
@@ -36,19 +35,20 @@ func checkAlias(alias string) error {
 }
 
 func validAlias(alias string) bool {
-	n := 0
-	for _, r := range alias {
-		if !aliasChar(r) {
+	if len(alias) < minAliasLen || len(alias) > maxAliasLen {
+		return false
+	}
+	for i := range len(alias) {
+		if !aliasChar(alias[i]) {
 			return false
 		}
-		n++
 	}
 
-	return n >= minAliasLen && n <= maxAliasLen
+	return true
 }
 
-func aliasChar(r rune) bool {
-	return unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' || r == '-'
+func aliasChar(c byte) bool {
+	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_' || c == '-'
 }
 
 func reservedAlias(alias string) bool {

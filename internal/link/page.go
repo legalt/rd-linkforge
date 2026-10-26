@@ -29,7 +29,7 @@ func (p Page) AfterID() (uint64, error) {
 
 	id, err := base62.Decode(p.Cursor)
 	if err != nil {
-		return 0, fmt.Errorf("decode cursor: %w", ErrInvalidCursor)
+		return 0, fmt.Errorf("decode cursor %q: %w: %w", p.Cursor, ErrInvalidCursor, err)
 	}
 
 	return id, nil
