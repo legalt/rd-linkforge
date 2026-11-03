@@ -5,7 +5,7 @@ import (
 	"errors"
 	"slices"
 
-	"github.com/skskuzan/rd-linkforge/internal/link"
+	"github.com/legalt/rd-linkforge/internal/link"
 )
 
 var ErrDuplicateID = errors.New("store: duplicated id")

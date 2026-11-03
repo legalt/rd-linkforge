@@ -6,7 +6,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/skskuzan/rd-linkforge/internal/link"
+	"github.com/legalt/rd-linkforge/internal/link"
 )
 
 var _ link.Store = (*Store)(nil)
