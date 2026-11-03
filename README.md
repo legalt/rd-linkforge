@@ -47,6 +47,14 @@ These hold for every milestone.
 3. **Analytics never blocks a redirect.** `Ingester.Submit` drops events under saturation rather than applying backpressure.
 4. **Every listener shares one lifecycle contract**, which is what makes a single coordinated graceful shutdown possible.
 
+## Shortener
+
+`link.Service` implements `link.Shortener`. It checks a shorten request, issues the next ID, and stores the link. Resolve returns the link for a code and rejects one that has expired. List returns an owner's links a page at a time, including expired ones. Delete removes a link when the caller owns it.
+
+```bash
+go test ./...
+```
+
 ## Working on it
 
 ```bash
