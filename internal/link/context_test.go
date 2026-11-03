@@ -33,3 +33,32 @@ func TestServiceContext(t *testing.T) {
 		})
 	}
 }
+
+func TestWithFirstID(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		opts []Option
+		want uint64
+	}{
+		{"default", nil, 1},
+		{"configured", []Option{WithFirstID(42)}, 42},
+		{"zero", []Option{WithFirstID(0)}, 1},
+		{"zero preserves previous option", []Option{WithFirstID(42), WithFirstID(0)}, 42},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			svc := NewService(NoopStore{}, tc.opts...)
+			ctx, cancel := context.WithCancel(context.Background())
+			cancel()
+			req := ShortenRequest{Target: "https://go.dev", OwnerID: "cli"}
+			if _, err := svc.Shorten(ctx, req); err != context.Canceled {
+				t.Fatalf("canceled Shorten error = %v", err)
+			}
+			for offset := uint64(0); offset < 2; offset++ {
+				got, err := svc.Shorten(context.Background(), req)
+				if err != nil || got.ID != tc.want+offset {
+					t.Fatalf("Shorten ID = %d, %v; want %d", got.ID, err, tc.want+offset)
+				}
+			}
+		})
+	}
+}
