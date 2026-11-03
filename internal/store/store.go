@@ -24,7 +24,11 @@ func New() *Store {
 	}
 }
 
-func (s *Store) Create(_ context.Context, l link.Link) (link.Link, error) {
+func (s *Store) Create(ctx context.Context, l link.Link) (link.Link, error) {
+	if err := ctx.Err(); err != nil {
+		return link.Link{}, err
+	}
+
 	if _, ok := s.byID[l.ID]; ok {
 		return link.Link{}, ErrDuplicateID
 	}
@@ -38,7 +42,11 @@ func (s *Store) Create(_ context.Context, l link.Link) (link.Link, error) {
 	return l, nil
 }
 
-func (s *Store) ByCode(_ context.Context, code string) (link.Link, error) {
+func (s *Store) ByCode(ctx context.Context, code string) (link.Link, error) {
+	if err := ctx.Err(); err != nil {
+		return link.Link{}, err
+	}
+
 	id, ok := s.byCode[code]
 	if !ok {
 		return link.Link{}, link.ErrNotFound
@@ -52,7 +60,11 @@ func (s *Store) ByCode(_ context.Context, code string) (link.Link, error) {
 	return l, nil
 }
 
-func (s *Store) ListByOwner(_ context.Context, ownerID string, page link.Page) ([]link.Link, error) {
+func (s *Store) ListByOwner(ctx context.Context, ownerID string, page link.Page) ([]link.Link, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+
 	page = page.Normalize()
 	after, err := page.AfterID()
 	if err != nil {
@@ -79,7 +91,11 @@ func (s *Store) ListByOwner(_ context.Context, ownerID string, page link.Page) (
 	return out, nil
 }
 
-func (s *Store) Delete(_ context.Context, id uint64) error {
+func (s *Store) Delete(ctx context.Context, id uint64) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
 	l, ok := s.byID[id]
 	if !ok {
 		return link.ErrNotFound
