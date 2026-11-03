@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/skskuzan/rd-linkforge/internal/link"
+	"github.com/legalt/rd-linkforge/internal/link"
 )
 
 func TestAdd(t *testing.T) {
