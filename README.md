@@ -6,7 +6,7 @@ The design is specified in the project TDD; this repository is the skeleton it d
 
 ## Current state
 
-The in-memory store, shortener service, environment configuration, file I/O and operator CLI are implemented. The remaining interfaces have Null Object implementations that later milestones replace.
+The in-memory store, shortener service, reusable data structures, environment configuration, file I/O and operator CLI are implemented. The remaining interfaces have Null Object implementations that later milestones replace.
 
 Each file declares exactly one interface alongside its no-op implementation, so the compile-time contract and its placeholder stay together. Types shared by several interfaces live in the package's `model.go`.
 
@@ -18,8 +18,12 @@ cmd/      linkforged        service binary — prints its version, nothing more
 
 pkg/                        reusable libraries — a separate Go module
   shortid/  Codec           base62 encode/decode                       M1
-            Generator       collision-resistant code issuing           M4
-  cache/    Cache[K,V]      bounded cache on the redirect hot path     M4
+             Generator       code issuing contract                      M4
+             CodeGenerator   random-and-counter base62 codes             M4
+  cache/    Cache[K,V]      bounded cache contract                     M4
+             LRU[K,V]        least-recently-used cache                   M4
+  trie/     Trie            byte-wise prefix search                    M4
+  topk/     TopK            bounded best-N heap                        M4
 
 internal/                   application code
   link/     Store           link persistence, declared by its consumer M1 / M7
@@ -54,6 +58,41 @@ These hold for every milestone.
 ```bash
 go test ./...
 ```
+
+## Complexity
+
+Here `n` is the number of stored elements, `N` is the TopK heap capacity, `L` is a prefix length, `w` is an inserted word length, and `k` is the number of returned words. Trie bounds assume word lengths are bounded; more precisely, producing results also costs the total number of returned bytes.
+
+| Structure | Operation | Average time | Worst time |
+|---|---|---:|---:|
+| LRU | `Get` | O(1) | O(n) |
+| LRU | `Put` | O(1) amortized | O(n) |
+| trie | `Insert` | O(w) | O(w) |
+| trie | `WithPrefix` | O(L + k) | O(L + n) |
+| topk | `Add` | O(log N) | O(log N) |
+| topk | `Result` | O(N log N) | O(N log N) |
+
+An LRU hit remains O(1) on average even though it changes recency: the hash map finds the list node directly, and `container/list` moves that known node without scanning. The map and doubly linked list are the two structures that make this possible; the O(n) theoretical worst case comes from pathological hash-map behavior rather than list movement.
+
+## Benchmarks
+
+Output from `make bench` on an Apple M5 Pro:
+
+```text
+goos: darwin
+goarch: arm64
+pkg: github.com/legalt/rd-linkforge/pkg/cache
+cpu: Apple M5 Pro
+BenchmarkLRUGetHit-18     141239626         8.410 ns/op       0 B/op       0 allocs/op
+
+goos: darwin
+goarch: arm64
+pkg: github.com/legalt/rd-linkforge/pkg/trie
+cpu: Apple M5 Pro
+BenchmarkTrieWithPrefix-18       100862     11349 ns/op    6064 B/op     108 allocs/op
+```
+
+The LRU hit performs no allocations; the trie query allocates its result strings and growing result slice while returning the matching words.
 
 ## Working on it
 
