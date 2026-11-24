@@ -3,7 +3,7 @@ package link
 import (
 	"fmt"
 
-	"github.com/skskuzan/rd-linkforge/internal/base62"
+	"github.com/legalt/rd-linkforge/internal/base62"
 )
 
 const (

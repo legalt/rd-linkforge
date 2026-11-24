@@ -6,7 +6,7 @@ The design is specified in the project TDD; this repository is the skeleton it d
 
 ## Current state
 
-**Skeleton only.** Every seam in the architecture exists as an interface with a Null Object implementation that satisfies it and does nothing. Nothing is wired together and no behaviour is implemented yet — each milestone replaces one set of `Noop*` types with real ones.
+The in-memory store, shortener service, environment configuration, file I/O and operator CLI are implemented. The remaining interfaces have Null Object implementations that later milestones replace.
 
 Each file declares exactly one interface alongside its no-op implementation, so the compile-time contract and its placeholder stay together. Types shared by several interfaces live in the package's `model.go`.
 
@@ -14,7 +14,7 @@ Each file declares exactly one interface alongside its no-op implementation, so 
 
 ```
 cmd/      linkforged        service binary — prints its version, nothing more
-          linkctl           operator CLI   — prints its version, nothing more
+          linkctl           operator CLI   — import, export, config, version
 
 pkg/                        reusable libraries — a separate Go module
   shortid/  Codec           base62 encode/decode                       M1
@@ -56,6 +56,35 @@ go test ./...
 ```
 
 ## Working on it
+
+`linkctl` imports one target URL per line, ignoring blank lines and lines starting
+with `#`. It stores JSON Lines, preserves existing links, and continues their IDs.
+Invalid targets are skipped; a partial import exits with code 1.
+
+```bash
+printf 'https://go.dev\nhttps://example.com\n' > targets.txt
+go run ./cmd/linkctl import -in targets.txt -db links.jsonl
+go run ./cmd/linkctl export -db links.jsonl -out links.csv
+```
+
+Omit `-out` to write CSV to stdout. Logs and errors go to stderr. `linkctl config`
+validates these environment variables; surrounding whitespace is trimmed, and
+empty or whitespace-only values are treated as unset:
+
+| Variable | Default | Rule |
+|---|---|---|
+| `LF_HTTP_ADDR` | `:8080` | host:port, port 1–65535 |
+| `LF_ADMIN_ADDR` | `127.0.0.1:6060` | host:port, port 1–65535 |
+| `LF_TCP_ADDR` | `:7070` | host:port, port 1–65535 |
+| `LF_PG_DSN` | Required | Nonempty |
+| `LF_MONGO_URI` | Required | Nonempty |
+| `LF_JWT_SECRET` | Required | At least 32 bytes |
+| `LF_CACHE_SIZE` | `100000` | Positive integer |
+| `LF_LOG_LEVEL` | `info` | debug, info, warn or error, case insensitive |
+
+Only `config` requires the database credentials and JWT secret. Credentials are
+redacted in configuration logs. All commands use `LF_LOG_LEVEL` for logging;
+an invalid level or invalid command usage exits with code 2.
 
 ```bash
 make            # vet, lint and test — the same gates CI runs
